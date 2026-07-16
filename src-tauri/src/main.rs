@@ -8,7 +8,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{
     menu::{Menu, MenuBuilder, MenuItem, MenuItemBuilder},
     tray::TrayIconBuilder,
-    AppHandle, Emitter, Manager, State,
+    AppHandle, Emitter, Manager, State, WindowEvent,
 };
 use tokio::sync::Mutex;
 
@@ -588,6 +588,14 @@ fn main() {
         })
         .manage(TrayState {
             result_items: std::sync::Mutex::new(Vec::new()),
+        })
+        .on_window_event(|window, event| {
+            // 关闭窗口时并不退出，而是隐藏到托盘，保持后台常驻。
+            // 用户通过托盘菜单 "Show Window" 重新唤起，"Quit" 才真正退出。
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                api.prevent_close();
+                let _ = window.hide();
+            }
         })
         .setup(|app| {
             // 构建初始托盘菜单（为每个模型创建结果项）
