@@ -423,6 +423,14 @@
             line-height: 1.1;
             letter-spacing: -0.02em;
         }
+        .result-tokps .unit,
+        .history-tokps .unit {
+            font-size: 0.6em;
+            font-weight: 600;
+            color: var(--text-3);
+            margin-left: 2px;
+            letter-spacing: 0;
+        }
         .result-detail {
             font-size: 0.72rem;
             color: var(--text-3);
@@ -792,7 +800,7 @@
                         ${record.results.map(r => `
                             <div class="history-result">
                                 <div class="history-model" title="${escapeHtml(r.model_name)}">${escapeHtml(r.model_name)}</div>
-                                <div class="history-tokps">${r.tok_per_sec.toFixed(1)}</div>
+                                <div class="history-tokps">${r.tok_per_sec.toFixed(1)} <span class="unit">tok/s</span></div>
                                 <div class="result-detail">${r.total_time_ms}ms · ttft ${r.ttft_ms}ms</div>
                             </div>
                         `).join('')}
@@ -890,7 +898,7 @@
                         ${result.error ? `<div class="result-error">${escapeHtml(result.error)}</div>` : ''}
                     </div>
                     <div class="result-stats">
-                        <div class="result-tokps">${result.error ? 'ERR' : result.tok_per_sec.toFixed(1)}</div>
+                        <div class="result-tokps">${result.error ? 'ERR' : `${result.tok_per_sec.toFixed(1)} <span class="unit">tok/s</span>`}</div>
                         <div class="result-detail">${result.total_time_ms}ms · ttft ${result.ttft_ms}ms</div>
                     </div>
                 </div>
