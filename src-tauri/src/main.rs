@@ -10,6 +10,7 @@ use tauri::{
     tray::TrayIconBuilder,
     AppHandle, Emitter, Manager, State, WindowEvent,
 };
+use tauri::{ActivationPolicy, RunEvent};
 use tokio::sync::Mutex;
 
 static TEST_RUNNING: AtomicBool = AtomicBool::new(false);
@@ -600,6 +601,9 @@ fn main() {
         .setup(|app| {
             // 构建初始托盘菜单（为每个模型创建结果项）
             rebuild_tray_menu(app.handle())?;
+            // 带 tray 的 app 默认可能被设为 Accessory（不在 Dock 显示），
+            // 这里强制设为 Regular，使得点击 Dock/Launchpad 图标能正常激活并唤起窗口。
+            app.set_activation_policy(ActivationPolicy::Regular);
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -613,6 +617,16 @@ fn main() {
             run_test,
             is_test_running,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app_handle, event| {
+            // macOS：点击 Dock/Launchpad 图标重新激活已运行的 app 时触发 Reopen。
+            // 此时若窗口被隐藏到托盘，则把它显示并聚焦，使"点 App 图标也能弹出窗口"。
+            if let RunEvent::Reopen { .. } = event {
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+            }
+        });
 }

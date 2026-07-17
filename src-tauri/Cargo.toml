@@ -1,6 +1,6 @@
 [package]
 name = "model-speed"
-version = "0.1.0"
+version = "0.1.1"
 description = "Model Token Speed Tester"
 authors = ["Favor"]
 edition = "2021"
