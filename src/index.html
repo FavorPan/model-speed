@@ -887,6 +887,12 @@
         // Listen for events from Rust
         function setupListeners() {
             console.log('[setupListeners] registering...');
+            // 测试开始：清空 Current Results，避免与上一次结果叠加
+            // （托盘菜单 "Run Test Now" 直接调用 run_test，绕过前端的 runTest()，所以清空逻辑放在这里）
+            listen('test-started', () => {
+                document.getElementById('results').innerHTML = '';
+            });
+
             listen('test-progress', (event) => {
             console.log('[progress]', event.payload);
             const result = event.payload;

@@ -419,6 +419,10 @@ async fn run_test(app: AppHandle) -> Result<String, String> {
         return Err("No models configured".to_string());
     }
 
+    // 通知前端测试开始：清空旧的 Current Results。
+    // 无论从窗口按钮还是托盘菜单触发都会发出，避免结果叠加显示。
+    let _ = app.emit("test-started", ());
+
     let app_clone = app.clone();
 
     tokio::spawn(async move {
