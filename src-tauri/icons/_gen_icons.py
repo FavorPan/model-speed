@@ -37,7 +37,7 @@ def rounded_gradient(size, radius):
     d.rounded_rectangle([0, 0, size - 1, size - 1], radius=radius, outline=BORDER, width=max(1, size // 64))
     return img
 
-def bolt_path(size, scale=0.72):
+def bolt_path(size, scale=0.58):
     """Lightning bolt polygon centered in the square. scale < 1 = smaller bolt
     with more padding around it."""
     s = size
@@ -88,7 +88,8 @@ def make_tray(size=44):
     """Template-style tray icon: transparent bg, light bolt for menu bar."""
     img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
     d = ImageDraw.Draw(img)
-    pts = bolt_path(size)
+    # 托盘图标保持较大占比（菜单栏小图标需清晰），不受 app 图标缩小影响
+    pts = bolt_path(size, scale=0.78)
     # shift bolt to center (bolt bounds ~0.16..0.84 already centered)
     d.polygon(pts, fill=(235, 238, 245, 255))
     return img

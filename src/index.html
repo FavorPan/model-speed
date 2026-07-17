@@ -363,12 +363,15 @@
             justify-content: space-between;
             align-items: center;
             gap: 10px;
-            margin-bottom: 6px;
+            cursor: pointer;
+            user-select: none;
         }
+        .model-header:hover .model-name { color: var(--accent); }
         .model-name {
             font-weight: 600;
             color: var(--text);
             font-size: 0.92rem;
+            transition: color var(--dur) var(--ease);
         }
         .model-type {
             font-size: 0.68rem;
@@ -379,6 +382,20 @@
             font-weight: 500;
             flex: none;
         }
+        /* 展开箭头：默认 ▶，展开后 ▼ */
+        .model-caret {
+            color: var(--text-3);
+            font-size: 0.7rem;
+            flex: none;
+            transition: transform var(--dur) var(--ease);
+        }
+        .model-item.expanded .model-caret { transform: rotate(90deg); }
+        /* 详细信息默认隐藏，展开后显示 */
+        .model-details {
+            display: none;
+            margin-top: 10px;
+        }
+        .model-item.expanded .model-details { display: block; }
         .model-url {
             font-size: 0.78rem;
             color: var(--text-3);
@@ -395,6 +412,23 @@
             font-size: 0.78rem;
             flex: 0;
         }
+        /* 默认只显示前 3 个 model；超出部分隐藏，点"显示更多"展开 */
+        .model-item.model-extra { display: none; }
+        #modelsList.show-all .model-item.model-extra { display: block; }
+        .show-more {
+            display: block;
+            width: 100%;
+            margin-top: 8px;
+            padding: 7px 0;
+            background: transparent;
+            border: 1px dashed var(--border-soft);
+            border-radius: var(--r-ctrl);
+            color: var(--text-2);
+            font-size: 0.78rem;
+            cursor: pointer;
+            transition: border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+        }
+        .show-more:hover { border-color: var(--border); color: var(--accent); }
 
         /* ---- Results ---- */
         .results { margin-top: 4px; }
@@ -670,18 +704,45 @@
                 container.innerHTML = '<div class="empty">No models configured. Add one above to get started.</div>';
                 return;
             }
-            container.innerHTML = models.map(m => `
-                <div class="model-item">
-                    <div class="model-header">
+            const VISIBLE_LIMIT = 3;
+            const extraCount = Math.max(0, models.length - VISIBLE_LIMIT);
+            container.innerHTML = models.map((m, i) => `
+                <div class="model-item${i >= VISIBLE_LIMIT ? ' model-extra' : ''}">
+                    <div class="model-header" onclick="toggleModel(this)">
                         <span class="model-name">${escapeHtml(m.name)}</span>
                         <span class="model-type">${m.api_type}</span>
+                        <span class="model-caret">▶</span>
                     </div>
-                    <div class="model-url">${escapeHtml(m.base_url)} / ${escapeHtml(m.id)}</div>
-                    <div class="model-actions">
-                        <button class="btn btn-danger" onclick="deleteModel('${m.name}')">Delete</button>
+                    <div class="model-details">
+                        <div class="model-url">${escapeHtml(m.base_url)} / ${escapeHtml(m.id)}</div>
+                        <div class="model-actions">
+                            <button class="btn btn-danger" onclick="deleteModel('${m.name}')">Delete</button>
+                        </div>
                     </div>
                 </div>
             `).join('');
+            if (extraCount > 0) {
+                container.innerHTML += `<button class="show-more" onclick="toggleShowAll(this)">显示更多 (${extraCount})</button>`;
+            }
+        }
+
+        // 展开/收起超出前 3 个的隐藏 model 项
+        function toggleShowAll(btn) {
+            const list = btn.parentElement;
+            const showing = list.classList.toggle('show-all');
+            btn.textContent = showing ? '收起' : `显示更多 (${list.querySelectorAll('.model-extra').length})`;
+        }
+
+        // 展开/收起单个 model 项；同时只允许一项展开。
+        function toggleModel(headerEl) {
+            const item = headerEl.parentElement;
+            const wasExpanded = item.classList.contains('expanded');
+            // 收起其他所有展开项
+            item.parentElement.querySelectorAll('.model-item.expanded').forEach(el => {
+                el.classList.remove('expanded');
+            });
+            // 切换当前项（若之前是展开的，则收起；否则展开）
+            if (!wasExpanded) item.classList.add('expanded');
         }
 
         async function addModel() {
